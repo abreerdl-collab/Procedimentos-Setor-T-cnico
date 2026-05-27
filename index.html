@@ -1065,10 +1065,20 @@ const CHECK_ICON = `
 // Admin credentials (in production, use server-side auth)
 const ADMIN_CREDENTIALS = { user: 'admin', pass: 'admin2024' };
 
+const SUPABASE_CONFIG = {
+    url: 'https://ujnbwtgucyohcfrrdzhs.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqbmJ3dGd1Y3lvaGNmcnJkemhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4OTU0NjIsImV4cCI6MjA5NTQ3MTQ2Mn0.TxS1_CM_PxqHXO7oX4Ve9nsLgOMPe_lkcu9dWgz4nCY',
+    table: 'procedimento_cell_edits'
+};
+
+let savedChangesLoaded = false;
+
 // ============================================
 // INITIALIZATION
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+async function initializeApp() {
     buildRiskIndex();
     applyViewSettings();
     renderTabs();
@@ -1076,7 +1086,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTable();
     updateCounts();
     setupKeyboardShortcuts();
-});
+    await loadSavedChanges();
+}
 
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
@@ -1092,6 +1103,103 @@ function setupKeyboardShortcuts() {
             closeLogin();
         }
     });
+}
+
+// ============================================
+// SUPABASE PERSISTENCE
+// ============================================
+function isSupabaseConfigured() {
+    return Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey && SUPABASE_CONFIG.table);
+}
+
+async function supabaseRequest(path, options = {}) {
+    const response = await fetch(`${SUPABASE_CONFIG.url}/rest/v1/${path}`, {
+        ...options,
+        headers: {
+            apikey: SUPABASE_CONFIG.anonKey,
+            Authorization: `Bearer ${SUPABASE_CONFIG.anonKey}`,
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+        }
+    });
+
+    if (!response.ok) {
+        const detail = await response.text();
+        throw new Error(`Supabase ${response.status}: ${detail || response.statusText}`);
+    }
+
+    if (response.status === 204) return null;
+
+    const text = await response.text();
+    return text ? JSON.parse(text) : null;
+}
+
+async function loadSavedChanges() {
+    if (!isSupabaseConfigured()) return;
+
+    try {
+        const rows = await supabaseRequest(`${SUPABASE_CONFIG.table}?select=sheet_name,row_index,col_index,value&order=updated_at.asc`, {
+            method: 'GET'
+        });
+
+        if (!Array.isArray(rows) || rows.length === 0) {
+            savedChangesLoaded = true;
+            return;
+        }
+
+        rows.forEach(applySavedCellEdit);
+        savedChangesLoaded = true;
+        buildRiskIndex();
+        renderTabs();
+        renderFilters();
+        renderTable();
+        updateCounts();
+        showToast(`${rows.length} alteração(ões) salva(s) carregada(s).`, 'success');
+    } catch (error) {
+        console.error('Failed to load saved changes:', error);
+        showToast('Não foi possível carregar alterações salvas do Supabase.', 'error');
+    }
+}
+
+function applySavedCellEdit(edit) {
+    const sheet = SHEET_DATA[edit.sheet_name];
+    const rowIndex = Number(edit.row_index);
+    const colIndex = Number(edit.col_index);
+
+    if (!sheet || !Number.isInteger(rowIndex) || !Number.isInteger(colIndex) || rowIndex < 0 || colIndex < 0) return;
+    if (!sheet[rowIndex]) sheet[rowIndex] = [];
+
+    while (sheet[rowIndex].length <= colIndex) {
+        sheet[rowIndex].push('');
+    }
+
+    sheet[rowIndex][colIndex] = edit.value || '';
+}
+
+async function persistCellChanges(changedCells) {
+    if (!isSupabaseConfigured() || changedCells.length === 0) return false;
+
+    const payload = changedCells.map(cell => ({
+        sheet_name: cell.sheetName,
+        row_index: cell.rowIndex,
+        col_index: cell.colIndex,
+        value: cell.value,
+        updated_by: getAdminUserLabel()
+    }));
+
+    await supabaseRequest(`${SUPABASE_CONFIG.table}?on_conflict=sheet_name,row_index,col_index`, {
+        method: 'POST',
+        headers: {
+            Prefer: 'resolution=merge-duplicates,return=minimal'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    return true;
+}
+
+function getAdminUserLabel() {
+    return document.getElementById('adminUser')?.value?.trim() || 'admin';
 }
 
 // ============================================
@@ -1767,11 +1875,12 @@ function exitAdmin() {
     showToast('Modo administrador desativado.', 'info');
 }
 
-function saveChanges() {
+async function saveChanges() {
     if (!isAdmin) return;
 
     const editors = document.querySelectorAll('.cell-editor');
     let changes = 0;
+    const changedCells = [];
 
     editors.forEach(ed => {
         const r = parseInt(ed.dataset.row);
@@ -1780,6 +1889,12 @@ function saveChanges() {
 
         if (SHEET_DATA[currentSheet][r] && SHEET_DATA[currentSheet][r][c] !== newValue) {
             SHEET_DATA[currentSheet][r][c] = newValue;
+            changedCells.push({
+                sheetName: currentSheet,
+                rowIndex: r,
+                colIndex: c,
+                value: newValue
+            });
             changes++;
         }
     });
@@ -1787,8 +1902,16 @@ function saveChanges() {
     if (changes > 0) {
         buildRiskIndex();
         renderFilters();
-        showToast(`${changes} célula(s) atualizada(s) com sucesso!`, 'success');
-        console.log('Data updated for sheet:', currentSheet);
+
+        try {
+            const savedRemote = await persistCellChanges(changedCells);
+            const target = savedRemote ? 'e salva(s) no banco' : 'localmente';
+            showToast(`${changes} célula(s) atualizada(s) ${target}.`, 'success');
+            console.log('Data updated for sheet:', currentSheet);
+        } catch (error) {
+            console.error('Failed to persist changes:', error);
+            showToast('Alterações aplicadas localmente, mas não salvas no Supabase.', 'error');
+        }
     } else {
         showToast('Nenhuma alteração detectada.', 'info');
     }
