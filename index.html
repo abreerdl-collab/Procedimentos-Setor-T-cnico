@@ -49,6 +49,7 @@
             --cell-max-height: 340px;
             --cell-font-size: 0.9rem;
             --cell-line-height: 1.74;
+            --sidebar-width: 292px;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -67,6 +68,7 @@
             color: var(--text);
             line-height: 1.6;
             min-height: 100vh;
+            padding-left: var(--sidebar-width);
         }
 
         body.resizing-column {
@@ -100,24 +102,30 @@
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             padding: 0;
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
             z-index: 100;
             box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
 
         .header-top {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 28px;
-            flex-wrap: wrap;
-            gap: 12px;
+            flex-direction: column;
+            align-items: stretch;
+            padding: 18px 18px 16px;
+            gap: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
         }
 
         .header-title {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
         }
 
@@ -128,9 +136,10 @@
         }
 
         .header-title h1 {
-            font-size: 1.35rem;
+            font-size: 1.18rem;
             font-weight: 600;
             letter-spacing: -0.02em;
+            line-height: 1.25;
         }
 
         .header-title span {
@@ -142,8 +151,14 @@
 
         .header-actions {
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            align-items: stretch;
             gap: 10px;
+        }
+
+        .header-actions .btn {
+            justify-content: center;
+            width: 100%;
         }
 
         .btn {
@@ -196,8 +211,10 @@
 
         .tabs-container {
             background: rgba(0,0,0,0.15);
-            padding: 0 20px;
-            overflow-x: auto;
+            padding: 14px 12px 18px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            flex: 1;
             scrollbar-width: none;
         }
 
@@ -205,12 +222,17 @@
 
         .tabs {
             display: flex;
-            gap: 2px;
-            min-width: max-content;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
         }
 
         .tab {
-            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 11px 12px;
             background: transparent;
             border: none;
             color: rgba(255,255,255,0.65);
@@ -221,14 +243,16 @@
             transition: var(--transition);
             position: relative;
             white-space: nowrap;
-            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            text-align: left;
+            border-radius: var(--radius-sm);
         }
 
         .tab:hover { color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.05); }
 
         .tab.active {
-            color: white;
-            background: var(--bg);
+            color: var(--primary-dark);
+            background: rgba(255,255,255,0.95);
+            box-shadow: var(--shadow-sm);
         }
 
         .tab-badge {
@@ -243,7 +267,7 @@
             font-size: 0.65rem;
             font-weight: 700;
             border-radius: 9px;
-            margin-left: 6px;
+            margin-left: auto;
         }
 
         .main {
@@ -277,7 +301,7 @@
 
         .filters-grid {
             display: grid;
-            grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1.3fr) minmax(180px, 0.8fr) minmax(240px, 1.3fr) auto;
+            grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
             gap: 14px;
             align-items: end;
         }
@@ -430,6 +454,7 @@
         }
 
         .clear-filters {
+            width: 100%;
             min-height: 42px;
             justify-content: center;
             white-space: nowrap;
@@ -475,6 +500,231 @@
             height: 8px;
             border-radius: 50%;
             background: var(--risk-border);
+        }
+
+        .risk-card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 18px;
+        }
+
+        .risk-card {
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--risk-border, var(--primary-light));
+            border-radius: var(--radius);
+            background: #ffffff;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .risk-card:hover {
+            border-color: var(--risk-border, var(--primary-light));
+            box-shadow: var(--shadow-md);
+        }
+
+        .risk-card summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 16px 18px;
+            cursor: pointer;
+            list-style: none;
+            background: var(--risk-bg, #ffffff);
+        }
+
+        .risk-card summary::-webkit-details-marker { display: none; }
+
+        .risk-summary-main {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .risk-summary-title {
+            color: var(--risk-text, var(--text));
+            font-size: 0.96rem;
+            font-weight: 800;
+            line-height: 1.35;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .risk-summary-meta {
+            color: var(--text-secondary);
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .risk-summary-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .risk-summary-actions .copy-cell {
+            position: static;
+            background: rgba(255,255,255,0.88);
+        }
+
+        .risk-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.72);
+            color: var(--risk-text, var(--primary-dark));
+            transition: var(--transition);
+        }
+
+        .risk-toggle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .risk-card[open] .risk-toggle {
+            transform: rotate(180deg);
+        }
+
+        .risk-detail {
+            padding: 16px;
+            background: #ffffff;
+            border-top: 1px solid var(--border);
+        }
+
+        .risk-spec-table {
+            width: 100%;
+            min-width: 0;
+            table-layout: fixed;
+            border-collapse: collapse;
+            border-spacing: 0;
+            font-size: 0.86rem;
+            color: #111827;
+        }
+
+        .risk-spec-table tbody,
+        .risk-spec-table tr,
+        .risk-spec-table th,
+        .risk-spec-table td {
+            position: static;
+        }
+
+        .risk-spec-table th,
+        .risk-spec-table td {
+            border: 1px solid #9ca3af;
+            padding: 8px 10px;
+            vertical-align: top;
+            background: #ffffff;
+            white-space: normal;
+            text-transform: none;
+            letter-spacing: 0;
+            line-height: 1.5;
+        }
+
+        .risk-title-row th {
+            background: #7f7f7f;
+            color: #111827;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .risk-section-row th {
+            background: #d9d9d9;
+            color: #111827;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .risk-heading-row th {
+            background: #ffc000;
+            color: #111827;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        .risk-label-cell {
+            width: 24%;
+            background: #f8fafc !important;
+            color: #111827;
+            font-weight: 800;
+        }
+
+        .risk-value-cell {
+            position: relative !important;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .risk-value-cell.has-copy .risk-value-text {
+            padding-right: 42px;
+        }
+
+        .risk-value-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .risk-empty {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .risk-matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0;
+            margin-bottom: 8px;
+            border: 1px solid #d1d5db;
+        }
+
+        .risk-matrix-item {
+            min-width: 0;
+            border-right: 1px solid #d1d5db;
+        }
+
+        .risk-matrix-item:last-child {
+            border-right: 0;
+        }
+
+        .risk-matrix-label {
+            padding: 6px 8px;
+            background: #f8fafc;
+            font-weight: 800;
+            text-align: center;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .risk-matrix-value {
+            padding: 7px 8px;
+            text-align: center;
+            min-height: 38px;
+        }
+
+        .risk-matrix-raw {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #cbd5e1;
+        }
+
+        .risk-editor-wrap {
+            position: relative;
+        }
+
+        .risk-editor-wrap .copy-cell {
+            top: 8px;
+            right: 8px;
+        }
+
+        .risk-editor-wrap .cell-editor {
+            padding-right: 48px;
         }
 
         .table-wrapper {
@@ -676,10 +926,13 @@
 
         .admin-bar {
             display: none;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 20px;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
             background: var(--warning-light);
+            border-top: 1px solid #fcd34d;
             border-bottom: 1px solid #fcd34d;
             color: #92400e;
             font-size: 0.85rem;
@@ -690,7 +943,13 @@
 
         .admin-bar .admin-actions {
             display: flex;
+            flex-direction: column;
             gap: 8px;
+        }
+
+        .admin-bar .admin-actions .btn {
+            justify-content: center;
+            width: 100%;
         }
 
         .admin-mode td {
@@ -847,8 +1106,31 @@
         .toast-info { background: var(--primary); color: white; }
 
         @media (max-width: 768px) {
+            body { padding-left: 0; }
+            .header {
+                position: static;
+                width: auto;
+                max-height: none;
+                overflow: visible;
+            }
             .header-top { padding: 12px 16px; }
             .header-title h1 { font-size: 1.1rem; }
+            .header-actions { flex-direction: row; }
+            .tabs-container {
+                padding: 0 14px 12px;
+                overflow-x: auto;
+                overflow-y: hidden;
+                flex: none;
+            }
+            .tabs {
+                flex-direction: row;
+                gap: 6px;
+                min-width: max-content;
+            }
+            .tab {
+                width: auto;
+                justify-content: center;
+            }
             .main { padding: 16px; }
             .filters-panel { padding: 16px; }
             .filters-header { align-items: flex-start; }
@@ -857,6 +1139,12 @@
             .filters-grid { grid-template-columns: 1fr; gap: 12px; }
             .risk-legend { gap: 6px; }
             .risk-chip { font-size: 0.74rem; padding: 5px 9px; }
+            .risk-card-list { padding: 12px; }
+            .risk-card summary { align-items: flex-start; padding: 14px; }
+            .risk-summary-actions { gap: 8px; }
+            .risk-detail { padding: 10px; overflow-x: auto; }
+            .risk-spec-table { min-width: 720px; }
+            .risk-matrix-grid { grid-template-columns: 1fr 1fr; }
             table { min-width: 980px; border-spacing: 0 10px; }
             th { padding: 12px 36px 12px 14px; }
             td { padding: 7px 8px; font-size: 0.86rem; }
@@ -870,7 +1158,8 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         @media print {
-            .header { position: static; }
+            body { padding-left: 0; }
+            .header { position: static; width: auto; }
             .tabs-container, .filters-panel, .admin-bar, .copy-cell { display: none !important; }
             .table-scroll { max-height: none; overflow: visible; }
             .table-wrapper { box-shadow: none; border: 1px solid #ccc; }
@@ -1213,7 +1502,11 @@ function renderTabs() {
         const btn = document.createElement('button');
         btn.className = 'tab' + (name === currentSheet ? ' active' : '');
         const displayName = name.length > 25 ? name.substring(0, 22) + '...' : name;
-        btn.innerHTML = `${displayName} <span class="tab-badge">${SHEET_DATA[name].length - 1}</span>`;
+        const riskDetailConfig = getRiskDetailConfig((SHEET_DATA[name] && SHEET_DATA[name][0]) || []);
+        const recordCount = riskDetailConfig
+            ? countRiskDetailRows(SHEET_DATA[name], riskDetailConfig)
+            : SHEET_DATA[name].length - 1;
+        btn.innerHTML = `${displayName} <span class="tab-badge">${recordCount}</span>`;
         btn.title = name;
         btn.onclick = () => switchSheet(name);
         tabsContainer.appendChild(btn);
@@ -1629,6 +1922,350 @@ function setColumnWidth(table, colIndex, width) {
     if (th) th.style.width = `${nextWidth}px`;
 }
 
+function getHeaderIndex(headers, aliases) {
+    const normalizedAliases = aliases.map(alias => normalizeText(alias));
+    return headers.findIndex(header => {
+        const normalizedHeader = normalizeText(header);
+        return normalizedAliases.some(alias => normalizedHeader.includes(alias));
+    });
+}
+
+function getRiskDetailConfig(headers) {
+    let riskIndex;
+    let groupIndex;
+
+    if (normalizeText(headers[0]).includes('riscos mais utilizados')) {
+        riskIndex = 1;
+        groupIndex = 0;
+    } else {
+        riskIndex = getHeaderIndex(headers, ['risco', 'perigo fator de risco']);
+        groupIndex = getHeaderIndex(headers, ['grupo']);
+    }
+
+    const config = {
+        riskIndex,
+        groupIndex,
+        descriptionIndex: getHeaderIndex(headers, ['descricao']),
+        legalIndex: getHeaderIndex(headers, ['fundamentacao legal', 'fundamentacao']),
+        injuriesIndex: getHeaderIndex(headers, ['possiveis lesoes', 'agravos a saude']),
+        profileIndex: getHeaderIndex(headers, ['perfil de exposicao', 'perfil']),
+        matrixIndex: getHeaderIndex(headers, ['matriz de risco', 'matriz']),
+        actionsIndex: getHeaderIndex(headers, ['acoes necessarias', 'acoes'])
+    };
+
+    const hasDetailFields = [
+        config.descriptionIndex,
+        config.legalIndex,
+        config.injuriesIndex,
+        config.profileIndex,
+        config.actionsIndex
+    ].some(index => index >= 0);
+
+    return config.riskIndex >= 0 && hasDetailFields ? config : null;
+}
+
+function countRiskDetailRows(data, config) {
+    return data
+        .slice(1)
+        .filter(row => rowHasContent(row) && cleanCellText(row[config.riskIndex] || '').length > 0)
+        .length;
+}
+
+function getRiskTypeLabel(type) {
+    return RISK_TYPES.find(item => item.key === type)?.label || '';
+}
+
+function getRiskGroupLabel(rowData, config, riskType) {
+    if (config.groupIndex >= 0) {
+        const groupValue = cleanCellText(rowData[config.groupIndex] || '');
+        if (groupValue) return groupValue;
+    }
+
+    return getRiskTypeLabel(riskType) || 'Não classificado';
+}
+
+function createCopyButton(valueOrGetter, extraClass = '') {
+    const copyButton = document.createElement('button');
+    copyButton.type = 'button';
+    copyButton.className = `copy-cell${extraClass ? ` ${extraClass}` : ''}`;
+    copyButton.title = 'Copiar conteúdo';
+    copyButton.setAttribute('aria-label', 'Copiar conteúdo');
+    copyButton.innerHTML = COPY_ICON;
+    copyButton.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const value = typeof valueOrGetter === 'function' ? valueOrGetter() : valueOrGetter;
+        copyCellContent(value, copyButton);
+    };
+    return copyButton;
+}
+
+function formatRiskValue(value) {
+    const text = (value || '').toString();
+    if (!text.trim()) {
+        return '<span class="risk-empty">--</span>';
+    }
+    return highlightText(escapeHtml(text));
+}
+
+function createRiskValueCell(value, rowIndex, colIndex, options = {}) {
+    const td = document.createElement('td');
+    td.className = 'risk-value-cell';
+    if (options.colSpan) td.colSpan = options.colSpan;
+
+    const cellValue = (value || '').toString();
+
+    if (isAdmin && colIndex >= 0) {
+        const wrap = document.createElement('div');
+        wrap.className = 'risk-editor-wrap';
+
+        const textarea = document.createElement('textarea');
+        textarea.className = 'cell-editor';
+        textarea.value = cellValue;
+        textarea.dataset.row = rowIndex;
+        textarea.dataset.col = colIndex;
+        const lines = (cellValue.match(/\n/g) || []).length + 1;
+        textarea.rows = Math.max(2, Math.min(12, lines));
+        wrap.appendChild(textarea);
+
+        if (cellValue.trim()) {
+            wrap.appendChild(createCopyButton(() => textarea.value));
+        }
+
+        td.appendChild(wrap);
+        return td;
+    }
+
+    if (cellValue.trim()) td.classList.add('has-copy');
+
+    const text = document.createElement('div');
+    text.className = 'risk-value-text';
+    if (options.contentNode) {
+        text.appendChild(options.contentNode);
+    } else {
+        text.innerHTML = formatRiskValue(cellValue);
+    }
+    td.appendChild(text);
+
+    if (cellValue.trim()) {
+        td.appendChild(createCopyButton(cellValue));
+    }
+
+    return td;
+}
+
+function appendRiskSection(table, title, className = 'risk-section-row') {
+    const row = document.createElement('tr');
+    row.className = className;
+    const th = document.createElement('th');
+    th.colSpan = 4;
+    th.textContent = title;
+    row.appendChild(th);
+    table.appendChild(row);
+}
+
+function appendRiskFieldRow(table, label, value, rowIndex, colIndex) {
+    const row = document.createElement('tr');
+    const labelCell = document.createElement('td');
+    labelCell.className = 'risk-label-cell';
+    labelCell.textContent = label;
+    row.appendChild(labelCell);
+    row.appendChild(createRiskValueCell(value, rowIndex, colIndex, { colSpan: 3 }));
+    table.appendChild(row);
+}
+
+function parseRiskMatrix(value) {
+    const text = (value || '').toString();
+    const readLine = (label) => {
+        const regex = new RegExp(`${label}:\\s*([^\\n]+)`, 'i');
+        const match = text.match(regex);
+        return match ? match[1].trim() : '';
+    };
+
+    return {
+        probability: readLine('Probabilidade'),
+        severity: readLine('Gravidade'),
+        level: readLine('Nivel de risco') || readLine('Nível de risco'),
+        classification: readLine('Classificacao') || readLine('Classificação')
+    };
+}
+
+function createRiskMatrixContent(value) {
+    const matrix = parseRiskMatrix(value);
+    const wrapper = document.createElement('div');
+    const grid = document.createElement('div');
+    grid.className = 'risk-matrix-grid';
+
+    [
+        ['Probabilidade', matrix.probability],
+        ['Gravidade', matrix.severity],
+        ['NÍVEL DE RISCO', matrix.level],
+        ['Classificação', matrix.classification]
+    ].forEach(([label, itemValue]) => {
+        const item = document.createElement('div');
+        item.className = 'risk-matrix-item';
+
+        const labelEl = document.createElement('div');
+        labelEl.className = 'risk-matrix-label';
+        labelEl.textContent = label;
+        item.appendChild(labelEl);
+
+        const valueEl = document.createElement('div');
+        valueEl.className = 'risk-matrix-value';
+        valueEl.innerHTML = formatRiskValue(itemValue);
+        item.appendChild(valueEl);
+
+        grid.appendChild(item);
+    });
+
+    wrapper.appendChild(grid);
+
+    if ((value || '').toString().trim()) {
+        const raw = document.createElement('div');
+        raw.className = 'risk-matrix-raw';
+        raw.innerHTML = highlightText(escapeHtml(value));
+        wrapper.appendChild(raw);
+    }
+
+    return wrapper;
+}
+
+function appendRiskMatrixRow(table, value, rowIndex, colIndex) {
+    const row = document.createElement('tr');
+    const labelCell = document.createElement('td');
+    labelCell.className = 'risk-label-cell';
+    labelCell.textContent = 'Matriz de risco';
+    row.appendChild(labelCell);
+
+    if (isAdmin && colIndex >= 0) {
+        row.appendChild(createRiskValueCell(value, rowIndex, colIndex, { colSpan: 3 }));
+    } else {
+        row.appendChild(createRiskValueCell(value, rowIndex, colIndex, {
+            colSpan: 3,
+            contentNode: createRiskMatrixContent(value)
+        }));
+    }
+
+    table.appendChild(row);
+}
+
+function renderRiskCards(container, filteredRows, config, data) {
+    const list = document.createElement('div');
+    list.className = `risk-card-list${isAdmin ? ' admin-mode' : ''}`;
+    let rendered = 0;
+
+    for (let r = 1; r < filteredRows.length; r++) {
+        const originalIndex = filteredRows[r].idx;
+        const rowData = filteredRows[r].row;
+        const riskTitle = cleanCellText(rowData[config.riskIndex] || '');
+
+        if (!rowHasContent(rowData) || !riskTitle) continue;
+
+        const riskType = getRiskTypeForRow(currentSheet, rowData, originalIndex);
+        list.appendChild(renderRiskCard(rowData, originalIndex, config, riskType, riskTitle));
+        rendered++;
+    }
+
+    if (!rendered) {
+        container.innerHTML = `
+            <div class="no-results">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <h3>Nenhum resultado encontrado</h3>
+                <p>Tente buscar com termos diferentes, trocar o campo ou limpar os filtros.</p>
+            </div>`;
+        updateCounts(0, countRiskDetailRows(data, config));
+        return;
+    }
+
+    container.innerHTML = '';
+    container.appendChild(list);
+    updateCounts(rendered, countRiskDetailRows(data, config));
+}
+
+function renderRiskCard(rowData, rowIndex, config, riskType, riskTitle) {
+    const card = document.createElement('details');
+    card.className = `risk-card${riskType ? ` risk-${riskType}` : ''}`;
+    card.dataset.riskType = riskType || '';
+
+    const summary = document.createElement('summary');
+    const main = document.createElement('div');
+    main.className = 'risk-summary-main';
+
+    const title = document.createElement('div');
+    title.className = 'risk-summary-title';
+    title.innerHTML = highlightText(escapeHtml(riskTitle));
+    main.appendChild(title);
+
+    const meta = document.createElement('div');
+    meta.className = 'risk-summary-meta';
+    meta.textContent = getRiskGroupLabel(rowData, config, riskType);
+    main.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'risk-summary-actions';
+    actions.appendChild(createCopyButton(riskTitle));
+
+    const toggle = document.createElement('span');
+    toggle.className = 'risk-toggle';
+    toggle.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>`;
+    actions.appendChild(toggle);
+
+    summary.appendChild(main);
+    summary.appendChild(actions);
+    card.appendChild(summary);
+
+    const detail = document.createElement('div');
+    detail.className = 'risk-detail';
+
+    const table = document.createElement('table');
+    table.className = 'risk-spec-table';
+
+    appendRiskSection(table, `Especificação dos perigos/fatores de risco - ${currentSheet}`, 'risk-title-row');
+    appendRiskSection(table, 'Identificação');
+
+    const headingRow = document.createElement('tr');
+    headingRow.className = 'risk-heading-row';
+    ['Grupo', 'Perigo/Fator de Risco'].forEach((label, index) => {
+        const th = document.createElement('th');
+        th.colSpan = index === 0 ? 1 : 3;
+        th.textContent = label;
+        headingRow.appendChild(th);
+    });
+    table.appendChild(headingRow);
+
+    const identityRow = document.createElement('tr');
+    const groupHasSourceValue = config.groupIndex >= 0 && cleanCellText(rowData[config.groupIndex] || '').length > 0;
+    identityRow.appendChild(createRiskValueCell(getRiskGroupLabel(rowData, config, riskType), rowIndex, groupHasSourceValue ? config.groupIndex : -1));
+    identityRow.appendChild(createRiskValueCell(rowData[config.riskIndex] || '', rowIndex, config.riskIndex, { colSpan: 3 }));
+    table.appendChild(identityRow);
+
+    appendRiskFieldRow(table, 'Descrição', rowData[config.descriptionIndex] || '', rowIndex, config.descriptionIndex);
+    appendRiskFieldRow(table, 'Fundamentação legal', rowData[config.legalIndex] || '', rowIndex, config.legalIndex);
+    appendRiskFieldRow(table, 'Possíveis lesões ou agravos à saúde', rowData[config.injuriesIndex] || '', rowIndex, config.injuriesIndex);
+
+    appendRiskSection(table, 'Avaliação');
+    appendRiskFieldRow(table, 'Critério', 'Qualitativo', rowIndex, -1);
+    appendRiskFieldRow(table, 'Perfil de exposição', rowData[config.profileIndex] || '', rowIndex, config.profileIndex);
+
+    if (config.matrixIndex >= 0) {
+        appendRiskMatrixRow(table, rowData[config.matrixIndex] || '', rowIndex, config.matrixIndex);
+    }
+
+    appendRiskSection(table, 'Prevenção e controle');
+    appendRiskFieldRow(table, 'Ações necessárias', rowData[config.actionsIndex] || '', rowIndex, config.actionsIndex);
+
+    detail.appendChild(table);
+    card.appendChild(detail);
+
+    return card;
+}
+
 function renderTable() {
     const container = document.getElementById('tableContainer');
     const data = SHEET_DATA[currentSheet];
@@ -1641,6 +2278,13 @@ function renderTable() {
     const filteredRows = data
         .map((row, idx) => ({ row, idx }))
         .filter(({ row, idx }) => idx === 0 || rowMatchesFilters(row, idx));
+
+    const riskDetailConfig = getRiskDetailConfig(data[0] || []);
+    if (riskDetailConfig) {
+        renderRiskCards(container, filteredRows, riskDetailConfig, data);
+        return;
+    }
+
     const filteredData = filteredRows.map(item => item.row);
 
     if (filteredData.length <= 1) {
@@ -1809,6 +2453,17 @@ function escapeHtml(text) {
 // ============================================
 function updateCounts(filtered = null, total = null) {
     const data = SHEET_DATA[currentSheet];
+    const riskDetailConfig = getRiskDetailConfig((data && data[0]) || []);
+
+    if (riskDetailConfig) {
+        const t = total !== null ? total : countRiskDetailRows(data, riskDetailConfig);
+        const visibleCards = document.querySelectorAll('#tableContainer .risk-card').length;
+        const f = filtered !== null ? filtered : (visibleCards || (hasActiveFilters() ? 0 : t));
+        document.getElementById('resultCount').textContent = f;
+        document.getElementById('totalCount').textContent = t;
+        return;
+    }
+
     const t = total !== null ? total : Math.max(0, data.length - 1);
     const f = filtered !== null ? filtered : t;
     document.getElementById('resultCount').textContent = f;
