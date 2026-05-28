@@ -69,6 +69,11 @@
             line-height: 1.6;
             min-height: 100vh;
             padding-left: var(--sidebar-width);
+            transition: padding-left 0.24s ease;
+        }
+
+        body.sidebar-collapsed {
+            padding-left: 0;
         }
 
         body.resizing-column {
@@ -112,6 +117,50 @@
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            transition: transform 0.24s ease, box-shadow 0.24s ease;
+        }
+
+        body.sidebar-collapsed .header {
+            transform: translateX(calc(-1 * var(--sidebar-width)));
+            box-shadow: none;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 50%;
+            left: calc(var(--sidebar-width) - 18px);
+            z-index: 250;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 58px;
+            border: 1px solid rgba(15, 61, 79, 0.18);
+            border-left: 0;
+            border-radius: 0 12px 12px 0;
+            background: #ffffff;
+            color: var(--primary-dark);
+            box-shadow: var(--shadow-md);
+            cursor: pointer;
+            transform: translateY(-50%);
+            transition: var(--transition), left 0.24s ease;
+        }
+
+        body.sidebar-collapsed .sidebar-toggle {
+            left: 0;
+        }
+
+        .sidebar-toggle:hover,
+        .sidebar-toggle:focus-visible {
+            outline: none;
+            color: var(--primary);
+            border-color: var(--primary-light);
+            background: #f8fafc;
+        }
+
+        .sidebar-toggle svg {
+            width: 20px;
+            height: 20px;
         }
 
         .header-top {
@@ -1113,6 +1162,24 @@
                 max-height: none;
                 overflow: visible;
             }
+            body.sidebar-collapsed .header {
+                display: none;
+                transform: none;
+            }
+            .sidebar-toggle {
+                top: 16px;
+                right: 16px;
+                left: auto;
+                width: 42px;
+                height: 42px;
+                border-left: 1px solid rgba(15, 61, 79, 0.18);
+                border-radius: 10px;
+                transform: none;
+            }
+            body.sidebar-collapsed .sidebar-toggle {
+                left: 16px;
+                right: auto;
+            }
             .header-top { padding: 12px 16px; }
             .header-title h1 { font-size: 1.1rem; }
             .header-actions { flex-direction: row; }
@@ -1167,6 +1234,12 @@
     </style>
 </head>
 <body>
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" onclick="toggleSidebar()" aria-controls="tabs" aria-expanded="true" title="Fechar menu lateral">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+    </button>
+
     <header class="header">
         <div class="header-top">
             <div class="header-title">
@@ -1351,6 +1424,16 @@ const CHECK_ICON = `
         <polyline points="20 6 9 17 4 12"></polyline>
     </svg>`;
 
+const SIDEBAR_CLOSE_ICON = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>`;
+
+const SIDEBAR_OPEN_ICON = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>`;
+
 // Admin credentials (in production, use server-side auth)
 const ADMIN_CREDENTIALS = { user: 'admin', pass: 'admin2024' };
 
@@ -1368,6 +1451,7 @@ let savedChangesLoaded = false;
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 async function initializeApp() {
+    applySidebarState();
     buildRiskIndex();
     applyViewSettings();
     renderTabs();
@@ -1376,6 +1460,46 @@ async function initializeApp() {
     updateCounts();
     setupKeyboardShortcuts();
     await loadSavedChanges();
+}
+
+function applySidebarState() {
+    const collapsed = getStoredSidebarState();
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    updateSidebarToggle();
+}
+
+function toggleSidebar() {
+    const collapsed = !document.body.classList.contains('sidebar-collapsed');
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    storeSidebarState(collapsed);
+    updateSidebarToggle();
+}
+
+function getStoredSidebarState() {
+    try {
+        return localStorage.getItem('procedimentos_sidebar_collapsed') === '1';
+    } catch (error) {
+        return false;
+    }
+}
+
+function storeSidebarState(collapsed) {
+    try {
+        localStorage.setItem('procedimentos_sidebar_collapsed', collapsed ? '1' : '0');
+    } catch (error) {
+        // Storage can be unavailable in restricted browser modes; the toggle still works for the current page.
+    }
+}
+
+function updateSidebarToggle() {
+    const toggle = document.getElementById('sidebarToggle');
+    if (!toggle) return;
+
+    const collapsed = document.body.classList.contains('sidebar-collapsed');
+    toggle.innerHTML = collapsed ? SIDEBAR_OPEN_ICON : SIDEBAR_CLOSE_ICON;
+    toggle.title = collapsed ? 'Abrir menu lateral' : 'Fechar menu lateral';
+    toggle.setAttribute('aria-label', toggle.title);
+    toggle.setAttribute('aria-expanded', String(!collapsed));
 }
 
 function setupKeyboardShortcuts() {
